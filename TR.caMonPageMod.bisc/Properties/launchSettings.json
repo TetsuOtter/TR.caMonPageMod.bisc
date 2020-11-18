@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "TR.caMonPageMod.bisc": {
+      "commandName": "Executable",
+      "executablePath": "D:\\caMon\\caMon.exe",
+      "commandLineArgs": "$(TargetFileName)"
+    }
+  }
+}
