@@ -1,16 +1,22 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace TR.caMonPageMod.bisc
 {
 	public class BISCCtrl : Control
 	{
-		static public DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(BitmapSource), typeof(BISCCtrl));
-		public BitmapSource Source
+		static public DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(ImageSource), typeof(BISCCtrl));
+		public ImageSource Source
 		{
-			get => (BitmapSource)GetValue(SourceProperty);
+			get => (ImageSource)GetValue(SourceProperty);
 			set => SetValue(SourceProperty, value);
+		}
+		static public DependencyProperty MyMarginProperty = DependencyProperty.Register(nameof(MyMargin), typeof(Thickness), typeof(BISCCtrl), new PropertyMetadata(new Thickness(0)));
+		public Thickness MyMargin
+		{
+			get => (Thickness)GetValue(MyMarginProperty);
+			set => SetValue(MyMarginProperty, value);
 		}
 
 		static public DependencyProperty BitPositionNumberProperty = DependencyProperty.Register(nameof(BitPositionNumber), typeof(int), typeof(BISCCtrl), new PropertyMetadata(0, PropChanged));
@@ -44,7 +50,7 @@ namespace TR.caMonPageMod.bisc
 		static private void PropChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) => (d as BISCCtrl)?.SetVisibility();
 
 
-		static public DependencyProperty CurrentVisibilityProperty = DependencyProperty.Register(nameof(CurrentVisibility), typeof(Visibility), typeof(BISCCtrl));
+		static public DependencyProperty CurrentVisibilityProperty = DependencyProperty.Register(nameof(CurrentVisibility), typeof(Visibility), typeof(BISCCtrl), new PropertyMetadata(Visibility.Hidden));
 		public Visibility CurrentVisibility
 		{
 			get => (Visibility)GetValue(CurrentVisibilityProperty);
