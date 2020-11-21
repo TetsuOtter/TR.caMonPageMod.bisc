@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -54,7 +56,10 @@ namespace TR.caMonPageMod.bisc
 			if (b2b.BISC == null)
 				return;
 
-			if (PreviewGrid.Children?.Contains(b2b.BISC) != true) PreviewGrid.Children.Add(b2b.BISC);
+			if (PreviewGrid.Children?.Contains(b2b.BISC) == false) PreviewGrid.Children.Add(b2b.BISC);
+
+			b2b.Items ??= new ObservableCollection<BISCCtrl>();
+			if (b2b.Items?.Contains(b2b.BISC) != true) b2b.Items.Add(b2b.BISC);
 
 			b2b.BISC = null;
 		}
@@ -85,6 +90,7 @@ namespace TR.caMonPageMod.bisc
 				return;
 			var bisc = b2b.BISC;
 			if (PreviewGrid.Children?.Contains(bisc) == true) PreviewGrid.Children.Remove(bisc);
+			if (b2b.Items?.Contains(bisc) == true) b2b.Items.Remove(bisc);
 
 			b2b.BISC = null;
 		}
@@ -99,12 +105,11 @@ namespace TR.caMonPageMod.bisc
 			switch (e.Key)
 			{
 				case Key.Up:
-				case Key.Right:
 					b2b.CurrentValue++;
 					break;
 				case Key.Down:
-				case Key.Left:
-					b2b.CurrentValue--;
+					if (b2b.CurrentValue > 0)
+						b2b.CurrentValue--;
 					break;
 			}
 		}
@@ -220,6 +225,15 @@ namespace TR.caMonPageMod.bisc
 			}
 		}
 
-
+		private ObservableCollection<BISCCtrl> __Items = null;
+		public ObservableCollection<BISCCtrl> Items
+		{
+			get => __Items;
+			set
+			{
+				__Items = value;
+				OnPropertyChanged(nameof(Items));
+			}
+		}
 	}
 }
