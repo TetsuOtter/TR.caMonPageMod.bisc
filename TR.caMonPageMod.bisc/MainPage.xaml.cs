@@ -1,10 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 using Microsoft.Win32;
@@ -16,6 +21,13 @@ namespace TR.caMonPageMod.bisc
 	/// </summary>
 	public partial class MainPage : Page, caMon.IPages
 	{
+		static MainPage()
+		{
+			//ref : http://hensa40.cutegirl.jp/archives/2733
+			string s = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+			Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + s);
+		}
+
 		public MainPage()
 		{
 			InitializeComponent();
@@ -58,7 +70,7 @@ namespace TR.caMonPageMod.bisc
 
 			if (PreviewGrid.Children?.Contains(b2b.BISC) == false) PreviewGrid.Children.Add(b2b.BISC);
 
-			b2b.Items ??= new ObservableCollection<BISCCtrl>();
+			b2b.Items ??= new ObservableCollection<IBISCCtrl>();
 			if (b2b.Items?.Contains(b2b.BISC) != true) b2b.Items.Add(b2b.BISC);
 
 			b2b.BISC = null;
@@ -97,7 +109,121 @@ namespace TR.caMonPageMod.bisc
 
 		private void SaveBtnClicked(object sender, RoutedEventArgs e)
 		{
-			MessageBox.Show("Save!");
+			int imgHeight = 0;
+			int imgWidth = 0;
+			int bitmask = 0;
+			byte[][] px2w;
+			const int BYTES_PER_PIXEL = 4;//BGRA
+
+			if (b2b.Items?.Count is null or <= 0)
+			{
+				_ = MessageBox.Show("There are no Image!");
+				return;
+			}
+
+
+			#region 出力画像サイズの確認
+			foreach (var v in b2b.Items)
+				if (v.ShowWhen0 || v.ShowWhen1)
+					bitmask |= 0x1 << v.BitPositionNumber;//必要な最大値を確認
+
+			if (((long)bitmask * b2b.Interval) >= Int32.MaxValue)//Int32.MaxValue以上は非対応
+			{
+				_ = MessageBox.Show("必要な画像高さが大きすぎます.\n本ソフトウェアでは, Int32.MaxValue以上の高さの画像を扱えません.");
+				return;
+			}
+
+			#region 2のn乗確認
+			imgHeight = bitmask * b2b.Interval;
+			imgWidth = (int)Math.Ceiling(PreviewGrid.Width);//小数点以下切り上げ
+			int tmp_w = 0;
+			int tmp_h = 0;
+			for (int i = 0; i < 32; i++)
+				if (imgHeight >= (0x1 << i))
+				{
+					tmp_h = 0x1 << i;
+					break;
+				}
+			for (int i = 0; i < 32; i++)
+				if (imgWidth >= (0x1 << i))
+				{
+					tmp_w = 0x1 << i;
+					break;
+				}
+
+			if (imgHeight != tmp_h && imgWidth != tmp_w && MessageBox.Show("高さ/幅を2のn乗にしますか?", "Set the height/width to 2^n value?", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+			{
+				imgHeight = tmp_h;
+				imgWidth = tmp_w;
+			}
+
+			#endregion 2のn乗確認
+			#endregion 出力画像サイズの確認
+
+			var dig = new SaveFileDialog();
+			dig.Filter = "PNG(*.png)|*.png";//現状はpngのみ対応
+
+			if (dig.ShowDialog() == true)
+			{
+				#region 全描画画像取得
+				b2b.CollapsedWhenDrawing = Visibility.Collapsed;//UI描画コストを減らすため
+				bool? BIDSConnection = b2b.ConnectToBVE;
+
+				px2w = new byte[bitmask][];
+				RenderTargetBitmap rtb = new RenderTargetBitmap(imgWidth, b2b.Interval, 96, 96, PixelFormats.Pbgra32);
+				for (int i = 0; i <= bitmask; i++)
+				{
+					b2b.CurrentValue = i;
+					px2w[i] = new byte[imgWidth * b2b.Interval * BYTES_PER_PIXEL];
+					rtb.Render(PreviewGrid);//念のため
+					rtb.CopyPixels(px2w[i], imgWidth * BYTES_PER_PIXEL, 0);
+					rtb.Clear();
+				}
+
+				b2b.ConnectToBVE = BIDSConnection;
+				b2b.CollapsedWhenDrawing = Visibility.Visible;//UI描画コストを減らすため 復旧
+				#endregion 全描画画像取得
+				try
+				{
+					using (Bitmap img = new Bitmap(imgWidth, imgHeight))
+					{
+						Parallel.For(0, bitmask, (i) =>
+						{
+							BitmapData bd = null;
+							if (px2w[i]?.Length is null or <= 0)
+								return;
+							try
+							{
+								bd = img.LockBits(new Rectangle(0, i * b2b.Interval, imgWidth, b2b.Interval), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+								var intptr = bd.Scan0;
+								Marshal.Copy(px2w[i], 0, intptr, px2w[i].Length);
+								px2w[i] = null;//はやく解放してもらうために
+							}
+							finally
+							{
+								if (bd is not null) img.UnlockBits(bd);
+							}
+						});
+
+
+
+						img.Save(dig.FileName,
+							Path.GetExtension(dig.FileName).ToLower() switch
+							{
+								".png" => ImageFormat.Png,
+								".jpg" => ImageFormat.Jpeg,
+								".jpeg" => ImageFormat.Jpeg,
+								".bmp" => ImageFormat.Bmp,
+								_ => ImageFormat.Png
+							});
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("画像生成/保存処理に失敗しました.\n" + ex.ToString());
+					return;
+				}
+			}
 		}
 
 		private void CurrentValueTB_KeyDown(object sender, KeyEventArgs e)
@@ -225,8 +351,8 @@ namespace TR.caMonPageMod.bisc
 			}
 		}
 
-		private ObservableCollection<BISCCtrl> __Items = null;
-		public ObservableCollection<BISCCtrl> Items
+		private ObservableCollection<IBISCCtrl> __Items = null;
+		public ObservableCollection<IBISCCtrl> Items
 		{
 			get => __Items;
 			set
@@ -235,5 +361,17 @@ namespace TR.caMonPageMod.bisc
 				OnPropertyChanged(nameof(Items));
 			}
 		}
+
+		private Visibility __CollapsedWhenDrawing = Visibility.Visible;
+		public Visibility CollapsedWhenDrawing
+		{
+			get => __CollapsedWhenDrawing;
+			set
+			{
+				__CollapsedWhenDrawing = value;
+				OnPropertyChanged(nameof(CollapsedWhenDrawing));
+			}
+		}
+
 	}
 }

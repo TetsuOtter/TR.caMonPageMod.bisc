@@ -161,6 +161,7 @@
 								 Grid.Column="1"
 								 Grid.Row="0"
 								 Width="60"
+								 Visibility="{Binding CollapsedWhenDrawing}"
 								 Text="{Binding CurrentValue, Converter={StaticResource IntToString}}"/>
 
 				<Label Content="ConnectToBVE"
@@ -206,6 +207,7 @@
 			<Grid HorizontalAlignment="Left"
 						VerticalAlignment="Bottom"
 						ShowGridLines="True"
+						Visibility="{Binding CollapsedWhenDrawing}"
 						Margin="40,250,40,20">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="0"/>
@@ -217,7 +219,34 @@
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="0"/>
 				</Grid.RowDefinitions>
-				<Grid Grid.Row="1" Grid.Column="1" x:Name="PreviewGrid" Height="{Binding Interval}" />
+				<Grid Grid.Row="1" Grid.Column="1" x:Name="PreviewGrid" Height="{Binding Interval}" Visibility="Visible">
+					<Rectangle Height="{Binding Height, RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}"
+										 Width="{Binding Width, RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}"
+										 Visibility="{Binding CollapsedWhenDrawing}">
+						<!--ref : https://uchukamen.com/WPF/XAML-Brush/Default.htm-->
+						<Rectangle.Fill>
+							<DrawingBrush Viewport="1,0,0.1,0.1" TileMode="Tile">
+								<DrawingBrush.Drawing>
+									<DrawingGroup>
+										<GeometryDrawing Brush="White">
+											<GeometryDrawing.Geometry>
+												<RectangleGeometry Rect="0,0,40,40"/>
+											</GeometryDrawing.Geometry>
+										</GeometryDrawing>
+										<GeometryDrawing Brush="Gray">
+											<GeometryDrawing.Geometry>
+												<GeometryGroup>
+													<RectangleGeometry Rect="0,0,20,20" />
+													<RectangleGeometry Rect="20,20,20,20" />
+												</GeometryGroup>
+											</GeometryDrawing.Geometry>
+										</GeometryDrawing>
+									</DrawingGroup>
+								</DrawingBrush.Drawing>
+							</DrawingBrush>
+						</Rectangle.Fill>
+					</Rectangle>
+				</Grid>
 			</Grid>
 		</Grid>
 	</Viewbox>
