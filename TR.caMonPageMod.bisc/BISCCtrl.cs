@@ -4,7 +4,23 @@ using System.Windows.Media;
 
 namespace TR.caMonPageMod.bisc
 {
-	public class BISCCtrl : Control
+	public interface IBISCCtrl
+	{
+		public ImageSource Source { get; set; }
+		public Thickness MyMargin { get; set; }
+
+		public int BitPositionNumber { get; set; }
+
+		public int ValueToShow { get; set; }
+
+		public bool ShowWhen0 { get; set; }
+
+		public bool ShowWhen1 { get; set; }
+
+		public Visibility CurrentVisibility { get; }
+	}
+
+	public class BISCCtrl : Control, IBISCCtrl
 	{
 		static public DependencyProperty SourceProperty = DependencyProperty.Register(nameof(Source), typeof(ImageSource), typeof(BISCCtrl));
 		public ImageSource Source
