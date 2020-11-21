@@ -1,13 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
 		<LangVersion>9.0</LangVersion>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="caMon.IPages" Version="1.0.0.1" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<PackageReference Include="caMon.IPages" Version="1.0.0.1" />
+		<PackageReference Include="System.Drawing.Common" Version="5.0.0" />
+	</ItemGroup>
+	<!--ref : https://github.com/dotnet/msbuild/issues/5312-->
+	<PropertyGroup>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
 </Project>
