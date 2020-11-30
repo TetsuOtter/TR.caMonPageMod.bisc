@@ -24,13 +24,6 @@
 					HorizontalAlignment="Left"
 					VerticalAlignment="Top"
 					Height="200" Width="300">
-				<Button Content="ファイルを開く(F1)"
-							Margin="4"
-							Padding="{StaticResource SettingsPadding}"
-							Click="OpenFile"
-							HorizontalAlignment="Left"
-							VerticalAlignment="Top"/>
-
 				<Border BorderBrush="Red"
 							BorderThickness="2"
 							Margin="4"
@@ -57,7 +50,7 @@
 					</Grid.RowDefinitions>
 					
 					<!--#region Margin Left-->
-					<Label Grid.Row="0" Grid.Column="0" Content="Margin.Left" Foreground="White"/>
+					<Label Grid.Row="0" Grid.Column="0" Content="Margin.Left" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="0" Grid.Column="1"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
@@ -65,7 +58,7 @@
 					<!--#endregion-->
 					
 					<!--#region  Margin Top-->
-					<Label Grid.Row="1" Grid.Column="0" Content="Margin.Top" Foreground="White"/>
+					<Label Grid.Row="1" Grid.Column="0" Content="Margin.Top" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="1" Grid.Column="1"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
@@ -73,7 +66,7 @@
 					<!--#endregion-->
 
 					<!--#region BitPositionSetting-->
-					<Label Grid.Row="2" Grid.Column="0" Content="BitPositionNumber" Foreground="White"/>
+					<Label Grid.Row="2" Grid.Column="0" Content="BitPositionNumber" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="2" Grid.Column="1"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
@@ -93,7 +86,13 @@
 												Padding="{StaticResource SettingsPadding}"/>
 					<!--#endregion-->
 				</Grid>
-				
+
+				<Button Content="ファイルを開く(F1)"
+							Margin="4"
+							Padding="{StaticResource SettingsPadding}"
+							Click="OpenFile"
+							HorizontalAlignment="Left"
+							VerticalAlignment="Top"/>
 				<StackPanel Orientation="Horizontal"
 										Margin="4"
 										HorizontalAlignment="Right"
