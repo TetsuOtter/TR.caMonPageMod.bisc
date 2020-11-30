@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,11 +22,24 @@ namespace TR.caMonPageMod.bisc
 	/// </summary>
 	public partial class MainPage : Page, caMon.IPages
 	{
-		static MainPage()
+		static readonly string System_Drawimg_Common_Dll_Path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "System.Drawimg.Common.dll");
+		const string System_Drawing_Common_Dll_Fullname = @"System.Drawing.Common, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51";
+		private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 		{
-			//ref : http://hensa40.cutegirl.jp/archives/2733
-			string s = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-			Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + s);
+			//dllを自動で見つけられなかった場合
+			switch (args.Name)
+			{
+				case System_Drawing_Common_Dll_Fullname:
+					if (File.Exists(System_Drawimg_Common_Dll_Path) == true)
+					{
+						Assembly a = Assembly.LoadFrom(System_Drawimg_Common_Dll_Path);
+						if (string.Equals(System_Drawing_Common_Dll_Fullname, a?.FullName))
+							return a;
+					}
+					return null;
+				default:
+					return null;
+			}
 		}
 
 		public MainPage()
@@ -135,17 +149,17 @@ namespace TR.caMonPageMod.bisc
 
 			#region 2のn乗確認
 			imgHeight = bitmask * b2b.Interval;
-			imgWidth = (int)Math.Ceiling(PreviewGrid.Width);//小数点以下切り上げ
+			imgWidth = (int)Math.Ceiling(PreviewGrid.ActualWidth);//小数点以下切り上げ
 			int tmp_w = 0;
 			int tmp_h = 0;
 			for (int i = 0; i < 32; i++)
-				if (imgHeight >= (0x1 << i))
+				if (imgHeight <= (0x1 << i))
 				{
 					tmp_h = 0x1 << i;
 					break;
 				}
 			for (int i = 0; i < 32; i++)
-				if (imgWidth >= (0x1 << i))
+				if (imgWidth <= (0x1 << i))
 				{
 					tmp_w = 0x1 << i;
 					break;
@@ -169,8 +183,8 @@ namespace TR.caMonPageMod.bisc
 				b2b.CollapsedWhenDrawing = Visibility.Collapsed;//UI描画コストを減らすため
 				bool? BIDSConnection = b2b.ConnectToBVE;
 
-				px2w = new byte[bitmask][];
-				RenderTargetBitmap rtb = new RenderTargetBitmap(imgWidth, b2b.Interval, 96, 96, PixelFormats.Pbgra32);
+				px2w = new byte[bitmask + 1][];
+				RenderTargetBitmap rtb = new RenderTargetBitmap(imgWidth, b2b.Interval, 96, 96, PixelFormats.Pbgra32);//imgWidthが負になってる
 				for (int i = 0; i <= bitmask; i++)
 				{
 					b2b.CurrentValue = i;
@@ -187,7 +201,7 @@ namespace TR.caMonPageMod.bisc
 				{
 					using (Bitmap img = new Bitmap(imgWidth, imgHeight))
 					{
-						Parallel.For(0, bitmask, (i) =>
+						for (int i = 0; i <= bitmask; i++)
 						{
 							BitmapData bd = null;
 							if (px2w[i]?.Length is null or <= 0)
@@ -203,7 +217,7 @@ namespace TR.caMonPageMod.bisc
 							{
 								if (bd is not null) img.UnlockBits(bd);
 							}
-						});
+						}
 
 
 
@@ -239,139 +253,5 @@ namespace TR.caMonPageMod.bisc
 					break;
 			}
 		}
-	}
-	public class BISC_toBind : INotifyPropertyChanged
-	{
-		public event PropertyChangedEventHandler PropertyChanged;
-		private void OnPropertyChanged(string s) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(s));
-
-		public BISC_toBind()
-		{
-			caMon.SharedFuncs.SML.SMC_PanelDChanged += SML_SMC_PanelDChanged;
-		}
-
-		private void SML_SMC_PanelDChanged(object sender, ValueChangedEventArgs<int[]> e)
-		{
-			if (ConnectToBVE == true && caMon.SharedFuncs.SML.PanelA.Length > PanelIndex)
-				CurrentValue = caMon.SharedFuncs.SML.PanelA[PanelIndex];
-		}
-
-		private BISCCtrl __BISC = null;
-		public BISCCtrl BISC
-		{
-			get => __BISC;
-			set
-			{
-				__BISC = value;
-				MarginL = BISC?.MyMargin.Left ?? 0;
-				MarginT = BISC?.MyMargin.Top ?? 0;
-				OnPropertyChanged(nameof(BISC));
-			}
-		}
-
-		private double __MarginL = 0;
-		public double MarginL
-		{
-			get => __MarginL;
-			set
-			{
-				__MarginL = value;
-				if (BISC is not null)
-				{
-					Thickness t = BISC.MyMargin;
-					t.Left = value;
-					BISC.MyMargin = t;
-				}
-				OnPropertyChanged(nameof(MarginL));
-			}
-		}
-
-		private double __MarginT = 0;
-		public double MarginT
-		{
-			get => __MarginT;
-			set
-			{
-				__MarginT = value;
-				if (BISC is not null)
-				{
-					Thickness t = BISC.MyMargin;
-					t.Top = value;
-					BISC.MyMargin = t;
-				}
-				OnPropertyChanged(nameof(MarginT));
-			}
-		}
-
-		private int __CurrentValue = 0;
-		public int CurrentValue
-		{
-			get => __CurrentValue;
-			set
-			{
-				__CurrentValue = value;
-				OnPropertyChanged(nameof(CurrentValue));
-			}
-		}
-
-		private bool? __ConnectToBVE = false;
-		public bool? ConnectToBVE
-		{
-			get => __ConnectToBVE;
-			set
-			{
-				__ConnectToBVE = value;
-				OnPropertyChanged(nameof(ConnectToBVE));
-
-			}
-		}
-
-		private int __PanelIndex = 0;
-		public int PanelIndex
-		{
-			get => __PanelIndex;
-			set
-			{
-				__PanelIndex = value;
-				OnPropertyChanged(nameof(PanelIndex));
-
-				if (ConnectToBVE ==true && caMon.SharedFuncs.SML.PanelA.Length > value)
-					CurrentValue = caMon.SharedFuncs.SML.PanelA[value];
-			}
-		}
-
-		private int __Interval = 4;
-		public int Interval
-		{
-			get => __Interval;
-			set
-			{
-				__Interval = value;
-				OnPropertyChanged(nameof(Interval));
-			}
-		}
-
-		private ObservableCollection<IBISCCtrl> __Items = null;
-		public ObservableCollection<IBISCCtrl> Items
-		{
-			get => __Items;
-			set
-			{
-				__Items = value;
-				OnPropertyChanged(nameof(Items));
-			}
-		}
-
-		private Visibility __CollapsedWhenDrawing = Visibility.Visible;
-		public Visibility CollapsedWhenDrawing
-		{
-			get => __CollapsedWhenDrawing;
-			set
-			{
-				__CollapsedWhenDrawing = value;
-				OnPropertyChanged(nameof(CollapsedWhenDrawing));
-			}
-		}
-
 	}
 }
