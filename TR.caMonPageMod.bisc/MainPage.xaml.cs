@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -90,8 +89,7 @@ namespace TR.caMonPageMod.bisc
 			b2b.BISC = null;
 		}
 
-		private void BISC_MouseDown(object sender, MouseButtonEventArgs e)
-			=> b2b.BISC = sender as BISCCtrl;
+		private void BISC_MouseDown(object sender, MouseButtonEventArgs e) => b2b.BISC = sender as BISCCtrl;
 
 		private void Page_KeyDown(object sender, KeyEventArgs e)
 		{
@@ -107,6 +105,10 @@ namespace TR.caMonPageMod.bisc
 				case Key.F4:
 					AddBtnClicked();
 					break;
+
+				case Key.F5:
+					SaveBtnClicked();
+					break;
 			}
 		}
 
@@ -121,11 +123,12 @@ namespace TR.caMonPageMod.bisc
 			b2b.BISC = null;
 		}
 
-		private void SaveBtnClicked(object sender, RoutedEventArgs e)
+		private void SaveBtnClicked(object sender = null, RoutedEventArgs e = null)
 		{
 			int imgHeight = 0;
 			int imgWidth = 0;
 			int bitmask = 0;
+			int CurrentB2BCV = b2b.CurrentValue;
 			byte[][] px2w;
 			const int BYTES_PER_PIXEL = 4;//BGRA
 
@@ -194,6 +197,7 @@ namespace TR.caMonPageMod.bisc
 					rtb.Clear();
 				}
 
+				b2b.CurrentValue = CurrentB2BCV;//元のPositionに戻す
 				b2b.ConnectToBVE = BIDSConnection;
 				b2b.CollapsedWhenDrawing = Visibility.Visible;//UI描画コストを減らすため 復旧
 				#endregion 全描画画像取得
@@ -209,8 +213,7 @@ namespace TR.caMonPageMod.bisc
 							try
 							{
 								bd = img.LockBits(new Rectangle(0, i * b2b.Interval, imgWidth, b2b.Interval), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-								var intptr = bd.Scan0;
-								Marshal.Copy(px2w[i], 0, intptr, px2w[i].Length);
+								Marshal.Copy(px2w[i], 0, bd.Scan0, px2w[i].Length);
 								px2w[i] = null;//はやく解放してもらうために
 							}
 							finally
@@ -242,16 +245,42 @@ namespace TR.caMonPageMod.bisc
 
 		private void CurrentValueTB_KeyDown(object sender, KeyEventArgs e)
 		{
-			switch (e.Key)
+			if ((e.Key is Key.Up or Key.Down) && sender is TextBox tb)
 			{
-				case Key.Up:
-					b2b.CurrentValue++;
-					break;
-				case Key.Down:
-					if (b2b.CurrentValue > 0)
-						b2b.CurrentValue--;
-					break;
+				//ref : https://gist.github.com/yoshikazuendo/7524104
+				BindingExpression biexp = tb.GetBindingExpression(TextBox.TextProperty);
+
+				if(biexp is not null && biexp.DataItem is not null && biexp.ParentBinding.Path is not null)
+				{
+					var propinfo = biexp.DataItem.GetType().GetProperty(biexp.ParentBinding.Path.Path);
+					if (propinfo is not null)
+					{
+						int v;
+						object vv = propinfo.GetValue(biexp.DataItem, null);
+
+						if (vv is int?) v = (int?)vv ?? 0;
+						else if (vv is double?) v = (int)((double?)vv ?? 0.0);
+						else throw new NotSupportedException();
+
+						switch (e.Key)
+						{
+							case Key.Up:
+								v++;
+								break;
+							case Key.Down:
+								if (v > 0)
+									v--;
+								break;
+						}
+						propinfo.SetValue(biexp.DataItem, v, null);
+						biexp.UpdateTarget();
+					}
+				}
 			}
 		}
+
+		private void BackBtnClicked(object sender, RoutedEventArgs e) => BackToHome?.Invoke(this, null);
+
+		private void CloseBtnClicked(object sender, RoutedEventArgs e) => CloseApp?.Invoke(this, null);
 	}
 }
