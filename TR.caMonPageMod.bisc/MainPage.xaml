@@ -52,6 +52,7 @@
 					<!--#region Margin Left-->
 					<Label Grid.Row="0" Grid.Column="0" Content="Margin.Left" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="0" Grid.Column="1"
+									 PreviewKeyDown="CurrentValueTB_KeyDown"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
 									 Text="{Binding MarginL, Converter={StaticResource DoubleToString}}"/>
@@ -60,6 +61,7 @@
 					<!--#region  Margin Top-->
 					<Label Grid.Row="1" Grid.Column="0" Content="Margin.Top" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="1" Grid.Column="1"
+									 PreviewKeyDown="CurrentValueTB_KeyDown"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
 									 Text="{Binding MarginT, Converter={StaticResource DoubleToString}}"/>
@@ -68,9 +70,11 @@
 					<!--#region BitPositionSetting-->
 					<Label Grid.Row="2" Grid.Column="0" Content="BitPositionNumber" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="2" Grid.Column="1"
+									 PreviewKeyDown="CurrentValueTB_KeyDown"
 									 Margin="{StaticResource SettingsPadding}"
-									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
-									 Text="{Binding BISC.BitPositionNumber, Converter={StaticResource DoubleToString}}"/>
+									 DataContext="{Binding BISC}"
+									 IsEnabled="{Binding ., Converter={StaticResource IsNotNULL}}"
+									 Text="{Binding BitPositionNumber, Converter={StaticResource IntToString}}"/>
 					<!--#endregion-->
 
 					<!--#region ShowWhen0/1-->
@@ -88,6 +92,7 @@
 				</Grid>
 
 				<Button Content="ファイルを開く(F1)"
+								IsDefault="True"
 							Margin="4"
 							Padding="{StaticResource SettingsPadding}"
 							Click="OpenFile"
@@ -161,7 +166,7 @@
 								 Grid.Row="0"
 								 Width="60"
 								 Visibility="{Binding CollapsedWhenDrawing}"
-								 Text="{Binding CurrentValue, Converter={StaticResource IntToString}}"/>
+								 Text="{Binding CurrentValue, Converter={StaticResource IntToString}, Mode=TwoWay}"/>
 
 				<Label Content="ConnectToBVE"
 							 VerticalAlignment="Center"
@@ -180,6 +185,7 @@
 							 Grid.Column="0"
 							 Grid.Row="2"/>
 				<TextBox Margin="{StaticResource SettingsPadding}"
+								 PreviewKeyDown="CurrentValueTB_KeyDown"
 								 Grid.Column="1"
 								 Grid.Row="2"
 								 Width="60"
@@ -191,6 +197,7 @@
 							 Grid.Column="0"
 							 Grid.Row="4"/>
 				<TextBox Margin="{StaticResource SettingsPadding}"
+								 PreviewKeyDown="CurrentValueTB_KeyDown"
 								 Grid.Column="1"
 								 Grid.Row="4"
 								 Width="60"
@@ -207,7 +214,7 @@
 						VerticalAlignment="Bottom"
 						ShowGridLines="True"
 						Visibility="{Binding CollapsedWhenDrawing}"
-						Margin="40,250,40,20">
+						Margin="70,250,40,20">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="0"/>
 					<ColumnDefinition Width="*"/>
@@ -247,6 +254,19 @@
 					</Rectangle>
 				</Grid>
 			</Grid>
+
+			<Button Content="Back"
+							Click="BackBtnClicked"
+							HorizontalAlignment="Left"
+							VerticalAlignment="Bottom"
+							Margin="10"
+							Padding="5,2"/>
+			<Button Content="Close"
+							Click="CloseBtnClicked"
+							HorizontalAlignment="Right"
+							VerticalAlignment="Bottom"
+							Margin="10"
+							Padding="5,2"/>
 		</Grid>
 	</Viewbox>
 </Page>
