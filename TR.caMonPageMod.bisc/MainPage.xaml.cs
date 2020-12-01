@@ -184,7 +184,7 @@ namespace TR.caMonPageMod.bisc
 				bool? BIDSConnection = b2b.ConnectToBVE;
 
 				px2w = new byte[bitmask + 1][];
-				RenderTargetBitmap rtb = new RenderTargetBitmap(imgWidth, b2b.Interval, 96, 96, PixelFormats.Pbgra32);//imgWidthが負になってる
+				RenderTargetBitmap rtb = new RenderTargetBitmap(imgWidth, b2b.Interval, 96, 96, PixelFormats.Pbgra32);
 				for (int i = 0; i <= bitmask; i++)
 				{
 					b2b.CurrentValue = i;
