@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -151,8 +152,21 @@ namespace TR.caMonPageMod.bisc
 			}
 
 			#region 2のn乗確認
-			imgHeight = bitmask * b2b.Interval;
-			imgWidth = (int)Math.Ceiling(PreviewGrid.ActualWidth);//小数点以下切り上げ
+			imgHeight = (bitmask + 1) * b2b.Interval;//出力するパターンの個数はbitmask+1個(bitmaskは0から始まるため)
+			imgWidth = (int)Math.Ceiling(PreviewGrid.ActualWidth);//小数点以下切り上げ//なんかおかしな値を取得するっぽい.  要確認
+			
+			if (imgWidth <= 0 || imgHeight <= 0 || bitmask <= 0)
+			{
+				MessageBox.Show(
+					new StringBuilder("値が不正です")
+					.Append("\nimgWidth:").Append(imgWidth)
+					.Append("\nimgHeight:").Append(imgHeight)
+					.Append("\nbitmask:").Append(bitmask)
+					.ToString(), "TR.caMonPageMod.bisc SaveButtonClicked"
+					);
+				return;
+			}
+
 			int tmp_w = 0;
 			int tmp_h = 0;
 			for (int i = 0; i < 32; i++)
@@ -185,6 +199,7 @@ namespace TR.caMonPageMod.bisc
 				#region 全描画画像取得
 				b2b.CollapsedWhenDrawing = Visibility.Collapsed;//UI描画コストを減らすため
 				bool? BIDSConnection = b2b.ConnectToBVE;
+				b2b.ConnectToBVE = false;//一旦BVEからの値の反映を中断する
 
 				px2w = new byte[bitmask + 1][];
 				RenderTargetBitmap rtb = new RenderTargetBitmap(imgWidth, b2b.Interval, 96, 96, PixelFormats.Pbgra32);
@@ -198,7 +213,7 @@ namespace TR.caMonPageMod.bisc
 				}
 
 				b2b.CurrentValue = CurrentB2BCV;//元のPositionに戻す
-				b2b.ConnectToBVE = BIDSConnection;
+				b2b.ConnectToBVE = BIDSConnection;//BVEからの値の反映設定を復旧
 				b2b.CollapsedWhenDrawing = Visibility.Visible;//UI描画コストを減らすため 復旧
 				#endregion 全描画画像取得
 				try
@@ -241,6 +256,8 @@ namespace TR.caMonPageMod.bisc
 					return;
 				}
 			}
+
+			MessageBox.Show("画像の保存処理に成功しました", "TR.caMonPageMod.bisc");
 		}
 
 		private void CurrentValueTB_KeyDown(object sender, KeyEventArgs e)
