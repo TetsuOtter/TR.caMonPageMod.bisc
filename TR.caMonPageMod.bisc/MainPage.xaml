@@ -5,7 +5,7 @@
 			xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
 			xmlns:local="clr-namespace:TR.caMonPageMod.bisc" xmlns:System="clr-namespace:System;assembly=mscorlib"
 			mc:Ignorable="d" 
-			KeyDown="Page_KeyDown"
+			PreviewKeyDown="Page_KeyDown"
 			FontSize="14"
 			Title="MainPage">
 
@@ -18,19 +18,12 @@
 		<Thickness x:Key="SettingsPadding" Left="2" Top="2" Right="2" Bottom="2"/>
 	</Page.Resources>
 	<Viewbox>
-		<Grid Background="#111" MinHeight="480" MinWidth="640">
+		<Grid Background="#111" MinHeight="480" MinWidth="800">
 			<Grid Background="Black"
 					Margin="10"
 					HorizontalAlignment="Left"
 					VerticalAlignment="Top"
-					Height="200" Width="400">
-				<Button Content="ファイルを開く(F1)"
-							Margin="4"
-							Padding="{StaticResource SettingsPadding}"
-							Click="OpenFile"
-							HorizontalAlignment="Left"
-							VerticalAlignment="Top"/>
-
+					Height="200" Width="300">
 				<Border BorderBrush="Red"
 							BorderThickness="2"
 							Margin="4"
@@ -43,10 +36,9 @@
 				</Border>
 
 
-				<Grid Margin="10,32">
+				<Grid Margin="10,32" Width="280">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="auto"/>
-						<ColumnDefinition Width="*"/>
 						<ColumnDefinition Width="*"/>
 						<ColumnDefinition Width="auto"/>
 					</Grid.ColumnDefinitions>
@@ -58,43 +50,54 @@
 					</Grid.RowDefinitions>
 					
 					<!--#region Margin Left-->
-					<Label Grid.Row="0" Grid.Column="0" Content="Margin.Left" Foreground="White"/>
+					<Label Grid.Row="0" Grid.Column="0" Content="Margin.Left" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="0" Grid.Column="1"
+									 PreviewKeyDown="CurrentValueTB_KeyDown"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
 									 Text="{Binding MarginL, Converter={StaticResource DoubleToString}}"/>
 					<!--#endregion-->
 					
 					<!--#region  Margin Top-->
-					<Label Grid.Row="1" Grid.Column="0" Content="Margin.Top" Foreground="White"/>
+					<Label Grid.Row="1" Grid.Column="0" Content="Margin.Top" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="1" Grid.Column="1"
+									 PreviewKeyDown="CurrentValueTB_KeyDown"
 									 Margin="{StaticResource SettingsPadding}"
 									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
 									 Text="{Binding MarginT, Converter={StaticResource DoubleToString}}"/>
 					<!--#endregion-->
 
 					<!--#region BitPositionSetting-->
-					<Label Grid.Row="2" Grid.Column="0" Content="BitPositionNumber" Foreground="White"/>
+					<Label Grid.Row="2" Grid.Column="0" Content="BitPositionNumber" Foreground="White" Background="Black"/>
 					<TextBox Grid.Row="2" Grid.Column="1"
+									 PreviewKeyDown="CurrentValueTB_KeyDown"
 									 Margin="{StaticResource SettingsPadding}"
-									 IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
-									 Text="{Binding BISC.BitPositionNumber, Converter={StaticResource DoubleToString}}"/>
+									 DataContext="{Binding BISC}"
+									 IsEnabled="{Binding ., Converter={StaticResource IsNotNULL}}"
+									 Text="{Binding BitPositionNumber, Converter={StaticResource IntToString}}"/>
 					<!--#endregion-->
 
 					<!--#region ShowWhen0/1-->
-					<ToggleButton Grid.Row="0" Grid.Column="3" Content="ShowWhen0"
+					<ToggleButton Grid.Row="0" Grid.Column="2" Content="ShowWhen0"
 												IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
 												IsChecked="{Binding BISC.ShowWhen0}"
 												Margin="{StaticResource SettingsPadding}"
 												Padding="{StaticResource SettingsPadding}"/>
-					<ToggleButton Grid.Row="1" Grid.Column="3" Content="ShowWhen1"
+					<ToggleButton Grid.Row="1" Grid.Column="2" Content="ShowWhen1"
 												IsEnabled="{Binding BISC, Converter={StaticResource IsNotNULL}}"
 												IsChecked="{Binding BISC.ShowWhen1}"
 												Margin="{StaticResource SettingsPadding}"
 												Padding="{StaticResource SettingsPadding}"/>
 					<!--#endregion-->
 				</Grid>
-				
+
+				<Button Content="ファイルを開く(F1)"
+								IsDefault="True"
+							Margin="4"
+							Padding="{StaticResource SettingsPadding}"
+							Click="OpenFile"
+							HorizontalAlignment="Left"
+							VerticalAlignment="Top"/>
 				<StackPanel Orientation="Horizontal"
 										Margin="4"
 										HorizontalAlignment="Right"
@@ -112,6 +115,27 @@
 				</StackPanel>
 			</Grid>
 
+			<!-- ref : https://www.fenet.jp/dotnet/column/tool/5346/-->
+			<ListView Margin="330,10,200,0" Height="300" VerticalAlignment="Top" ItemsSource="{Binding Items}" SelectedItem="{Binding BISC}">
+				<ListView.View>
+					<GridView>
+						<GridViewColumn Header="Image" Width="60">
+							<!-- ref ; https://stackoverflow.com/questions/42022530/display-image-in-wpf-listview-->
+							<GridViewColumn.CellTemplate>
+								<DataTemplate>
+									<Image Source="{Binding Path=Source}" Stretch="Uniform"/>
+								</DataTemplate>
+							</GridViewColumn.CellTemplate>
+						</GridViewColumn>
+						<GridViewColumn Header="Left" DisplayMemberBinding="{Binding MyMargin.Left}"/>
+						<GridViewColumn Header="Top" DisplayMemberBinding="{Binding MyMargin.Top}"/>
+						<GridViewColumn Header="BitPos" DisplayMemberBinding="{Binding BitPositionNumber}"/>
+						<GridViewColumn Header="ShowWhen0" DisplayMemberBinding="{Binding ShowWhen0}"/>
+						<GridViewColumn Header="ShowWhen1" DisplayMemberBinding="{Binding ShowWhen1}"/>
+					</GridView>
+				</ListView.View>
+			</ListView>
+			
 			<Grid Margin="10"
 						Height="200"
 						Background="Black"
@@ -141,7 +165,8 @@
 								 Grid.Column="1"
 								 Grid.Row="0"
 								 Width="60"
-								 Text="{Binding CurrentValue, Converter={StaticResource IntToString}}"/>
+								 Visibility="{Binding CollapsedWhenDrawing}"
+								 Text="{Binding CurrentValue, Converter={StaticResource IntToString}, Mode=TwoWay}"/>
 
 				<Label Content="ConnectToBVE"
 							 VerticalAlignment="Center"
@@ -160,6 +185,7 @@
 							 Grid.Column="0"
 							 Grid.Row="2"/>
 				<TextBox Margin="{StaticResource SettingsPadding}"
+								 PreviewKeyDown="CurrentValueTB_KeyDown"
 								 Grid.Column="1"
 								 Grid.Row="2"
 								 Width="60"
@@ -171,6 +197,7 @@
 							 Grid.Column="0"
 							 Grid.Row="4"/>
 				<TextBox Margin="{StaticResource SettingsPadding}"
+								 PreviewKeyDown="CurrentValueTB_KeyDown"
 								 Grid.Column="1"
 								 Grid.Row="4"
 								 Width="60"
@@ -186,7 +213,8 @@
 			<Grid HorizontalAlignment="Left"
 						VerticalAlignment="Bottom"
 						ShowGridLines="True"
-						Margin="40">
+						Visibility="{Binding CollapsedWhenDrawing}"
+						Margin="70,250,40,20">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="0"/>
 					<ColumnDefinition Width="*"/>
@@ -197,8 +225,48 @@
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="0"/>
 				</Grid.RowDefinitions>
-				<Grid Grid.Row="1" Grid.Column="1" x:Name="PreviewGrid"/>
+				<Grid Grid.Row="1" Grid.Column="1" x:Name="PreviewGrid" Height="{Binding Interval}" Visibility="Visible">
+					<Rectangle Height="{Binding Height, RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}"
+										 Width="{Binding Width, RelativeSource={RelativeSource FindAncestor, AncestorType=Grid}}"
+										 Visibility="{Binding CollapsedWhenDrawing}">
+						<!--ref : https://uchukamen.com/WPF/XAML-Brush/Default.htm-->
+						<Rectangle.Fill>
+							<DrawingBrush Viewport="1,0,0.1,0.1" TileMode="Tile">
+								<DrawingBrush.Drawing>
+									<DrawingGroup>
+										<GeometryDrawing Brush="White">
+											<GeometryDrawing.Geometry>
+												<RectangleGeometry Rect="0,0,40,40"/>
+											</GeometryDrawing.Geometry>
+										</GeometryDrawing>
+										<GeometryDrawing Brush="Gray">
+											<GeometryDrawing.Geometry>
+												<GeometryGroup>
+													<RectangleGeometry Rect="0,0,20,20" />
+													<RectangleGeometry Rect="20,20,20,20" />
+												</GeometryGroup>
+											</GeometryDrawing.Geometry>
+										</GeometryDrawing>
+									</DrawingGroup>
+								</DrawingBrush.Drawing>
+							</DrawingBrush>
+						</Rectangle.Fill>
+					</Rectangle>
+				</Grid>
 			</Grid>
+
+			<Button Content="Back"
+							Click="BackBtnClicked"
+							HorizontalAlignment="Left"
+							VerticalAlignment="Bottom"
+							Margin="10"
+							Padding="5,2"/>
+			<Button Content="Close"
+							Click="CloseBtnClicked"
+							HorizontalAlignment="Right"
+							VerticalAlignment="Bottom"
+							Margin="10"
+							Padding="5,2"/>
 		</Grid>
 	</Viewbox>
 </Page>
